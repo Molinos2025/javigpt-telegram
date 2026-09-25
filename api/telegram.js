@@ -48,7 +48,11 @@ async function askGroq(message) {
 
   const data = await response.json();
 
-  return data.output_text || "No he podido generar una respuesta.";
+  const answer =
+  data.output?.flatMap(item => item.content || [])
+    .find(part => part.type === "output_text")?.text;
+
+return answer || "No he podido generar una respuesta.";
 }
 
 export default async function handler(req, res) {
