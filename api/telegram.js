@@ -1,5 +1,5 @@
 const TELEGRAM_API = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
-const OPENAI_API = "https://api.openai.com/v1/responses";
+const GROQ_API = "https://api.groq.com/openai/v1/responses";
 
 async function telegram(method, body) {
   const response = await fetch(`${TELEGRAM_API}/${method}`, {
@@ -17,22 +17,22 @@ async function telegram(method, body) {
   return response.json();
 }
 
-async function askOpenAI(message) {
-  const response = await fetch(OPENAI_API, {
+async function askGroq(message) {
+  const response = await fetch(GROQ_API, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-5.6-luna",
+      model: "openai/gpt-oss-120b",
       input: [
         {
           role: "system",
           content:
             "Eres JaviGPT Personal, el asistente privado de Javi. " +
-            "Responde en español, de forma clara, útil y directa. " +
-            "No inventes información. Todavía no tienes memoria persistente ni búsqueda web."
+            "Responde siempre en español, de forma clara, útil y directa. " +
+            "No inventes información."
         },
         {
           role: "user",
@@ -135,9 +135,8 @@ export default async function handler(req, res) {
       action: "typing"
     });
 
-    const answer = await askOpenAI(text);
+    const answer = await askGroq(text);
 
-    // Telegram limita la longitud de los mensajes.
     for (let i = 0; i < answer.length; i += 3900) {
       await telegram("sendMessage", {
         chat_id: message.chat.id,
